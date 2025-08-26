@@ -1,0 +1,1 @@
+Installation completed on <?php echo date('Y-m-d H:i:s'); ?>

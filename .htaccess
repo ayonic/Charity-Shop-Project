@@ -1,0 +1,41 @@
+# Prevent redirect loops and ensure proper URL handling
+Options -Indexes
+RewriteEngine On
+
+# Set the base for rewrites
+RewriteBase /charity-shop/
+
+# Prevent direct access to PHP files in certain directories
+# RewriteCond %{THE_REQUEST} ^[A-Z]{3,}\s/+customer/([^\s?]*)\.php[\s?] [NC]
+# RewriteRule ^ customer/%1 [R=301,L]
+
+# Handle session consistency
+<IfModule mod_headers.c>
+    # Prevent caching of sensitive pages
+    <FilesMatch "\.(php)$">
+        Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+        Header set Pragma "no-cache"
+        Header set Expires "Thu, 01 Jan 1970 00:00:00 GMT"
+    </FilesMatch>
+</IfModule>
+
+# PHP settings
+<IfModule mod_php7.c>
+    php_value session.use_only_cookies 1
+    php_value session.use_strict_mode 1
+    php_value session.cookie_httponly 1
+    php_value session.cookie_secure 0
+    php_value session.cookie_samesite "Lax"
+    php_value session.gc_maxlifetime 3600
+</IfModule>
+
+# Prevent access to sensitive files
+<FilesMatch "^\.(htaccess|htpasswd|ini|log|sh|inc|bak)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Redirect unauthenticated users from protected pages to signup
+RewriteCond %{REQUEST_URI} ^/(dashboard\.php|manager/dashboard\.php|cashier/dashboard\.php|customer/dashboard\.php|donor/dashboard\.php|volunteer/dashboard\.php)$ [NC]
+RewriteCond %{HTTP_COOKIE} !PHPSESSID
+RewriteRule ^.*$ /signup.php [R=302,L]
